@@ -127,3 +127,15 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+.flaskenv
+.idea/
+.idea/ClojureProjectResolveSettings.xml
+.idea/cs50_project1.iml
+.idea/dbnavigator.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml
+.idea/codeStyles/Project.xml
+
+.vscode/
+flask_session/
