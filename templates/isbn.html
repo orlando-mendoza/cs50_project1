@@ -1,0 +1,49 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<div class="container bg-light row no-gutters">
+    <h1>Book Details</h1>
+    <hr>
+    <div class="col" align="center">
+        <img src='{{ cover }}'>
+    </div>
+    <div class="col h6" >
+        <p><h2> {{ book["title"] }}</h2></p>
+        <p>Author: {{ book["author"]}}</p>
+        <p>Year: {{ book["year"]}}</p>
+        <p>ISBN: {{ book["isbn"]}}</p>
+        <p>{{'{0:,}'.format(ratings_count)}} ratings on <a href="https://www.goodreads.com/">GoodReads.com</a></p>
+        Average Rating: {{avg_rating}}</br>
+    </div>
+    <hr>
+    <div class="container col-md-8 offset-md-2" align="left">
+        <form name="review" action="{{ book['isbn']}}" method="POST" novalidate>
+            <fieldset class="form-group">
+                <legend>{{title}}</legend>
+
+                {{ form.hidden_tag() }}
+
+                <p>
+                    {{form.rate.label}}
+                    {{form.rate}}
+                    <span class="error-message"> {{ error}} </span>
+                </p>
+                <p>
+                    {{form.review.label}}
+                    {{form.review}}
+                    {% for error in form.review.errors %}
+                    <span class="error-message"> {{ error }}</span>
+                    {% endfor %}
+                </p>
+                <p align="right">
+                    {{ form.submit()}}
+                </p>
+            </fieldset>
+        </form>
+    </div>
+</div>
+
+
+
+{% endblock %}

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Books Reviews</title>
+
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet"
+              href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+              integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+              crossorigin="anonymous">
+        <!-- Load icon library -->
+        <script src="https://kit.fontawesome.com/2733a7a245.js" crossorigin="anonymous"></script>
+
+        <link rel="stylesheet" href="{{ url_for('static',filename='css/main.css')}}"/>
+
+
+    </head>
+        <div class="container">
+
+            {% if session['username']  %}
+
+                {% include "includes/nav-logout.html" %}
+
+            {% else  %}
+
+                {% include "includes/nav.html" %}
+
+            {% endif %}
+
+            {% with messages = get_flashed_messages (with_categories=true)%}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{category}}">
+                            <p>{{ message }}</p>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}
+            {% endblock %}
+
+        </div>
+        {% include "includes/footer.html" %}
+
+    </body>
+
+</html>

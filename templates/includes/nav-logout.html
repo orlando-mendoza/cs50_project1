@@ -1,0 +1,19 @@
+<header>
+    <nav class="navbar navbar-expand-sm bg-light navbar-light">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="{{url_for('index')}}"><i class="fas fa-home"></i> CS50 Project 1 - Books Reviews</a>
+            </div>
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <span class="navbar-text">{{ session['username'] }} </span>
+                </li>
+
+                <li>
+                    <a href="{{ url_for('logout')}}" class="nav-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </li>
+
+            </ul>
+
+    </nav>
+</header>

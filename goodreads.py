@@ -1,6 +1,13 @@
 import requests
+from application import app
 
-def getGoodReadsReview(isbns):
-    res = requests.get("https://www.goodreads.com/book/review_counts.json", \
-        params={"key": "GOODREADS_API_KEY", "isbns": isbns})
+def getGoodReadsReview(isbn):
+    res = requests.get("https://www.goodreads.com/book/review_counts.json", params={"key": app.config.get("API_KEY"), "isbns": isbn})
     return res.json()
+
+def getBookCover(isbn):
+    res = requests.get("https://www.googleapis.com/books/v1/volumes?q=isbn:" + isbn)
+    if res.json()['totalItems'] != 0:
+        return res.json()['items'][0]['volumeInfo']['imageLinks']['thumbnail']
+    else:
+        return "NO Cover FOUND"
