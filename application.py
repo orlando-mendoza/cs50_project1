@@ -2,7 +2,6 @@ import os
 
 from flask import Flask, session, redirect, url_for, request, render_template
 from flask_session import Session
-from markupsafe import escape
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
