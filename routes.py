@@ -1,8 +1,11 @@
-from flask import Flask, redirect, render_template, session, flash, url_for, request
+import datetime
+
+from flask import Flask, redirect, render_template, session, flash, url_for, request, abort
 from application import app, db
-from goodreads import getGoodReadsReview, getBookCover
+from goodreads import get_good_reads_review, get_book_cover
 from forms import LoginForm, RegisterForm, ReviewForm
 from werkzeug.security import generate_password_hash, check_password_hash
+
 
 @app.route("/", methods=['GET', 'POST'])
 def index():
@@ -18,30 +21,64 @@ def index():
         flash("Sorry, no results. Try selecting ISBN, Title or Author and doule-check the spelling.", "warning")
 
     return render_template('index.html', books=books)
-    '''   if 'username' in session:
-         return 'Logged in as %s' % escape(session['username'])
-    '''
+
 
 @app.route("/isbn/<string:isbn>", methods=['GET', 'POST'])
 def isbn(isbn):
+    # Fetch the book details
     book = db.execute("SELECT * FROM books WHERE isbn = :isbn", {"isbn": isbn}).fetchone()
-    good_reads_isbn = getGoodReadsReview(isbn)
-    ratings_count = good_reads_isbn['books'][0]['work_ratings_count']
-    avg_rating = good_reads_isbn['books'][0]['average_rating']
+    good_read_review = get_good_reads_review(isbn)
+    review_count = good_read_review['books'][0]['work_ratings_count']
+    average_score = good_read_review['books'][0]['average_rating']
+    book_cover = get_book_cover(isbn)
 
-    book_cover = getBookCover(isbn)
-    # when user is posting a review
+    # Fetch the reviews
+    reviews = db.execute(
+        "SELECT first_name, last_name, rate, comment, date, isbn_no FROM reviews LEFT JOIN users ON users.id = reviews.user_id WHERE reviews.isbn_no = :isbn",
+        {"isbn": isbn}).fetchall()
+
     form = ReviewForm()
 
+    # Check is a logged user is posting a review
     if request.method == 'POST':
-        rate = form.rate.data
-        review = form.review.data
-        user_id = session.get('user_id')
-        db.execute("INSERT INTO reviews (rate, comment, user_id, isbn_no) VALUES (:rate, :comment, :user_id, :isbn_no)", {"rate": rate, "comment": review, "user_id": user_id, "isbn_no": isbn})
-        db.commit()
-        flash("Thank you for reviwing this book!", "success")
+        if session.get('user_id') is None:
+            flash("You need to log in to write a review", "danger")
+        elif db.execute("SELECT * FROM reviews WHERE user_id = :user_id and isbn_no = :isbn",
+                        {"user_id": session.get('user_id'), "isbn": isbn}).rowcount != 0:
+            flash("Oops! You already reviewed this book!", "danger")
+        else:
+            rate = form.rate.data
+            review = form.review.data
+            user_id = session.get('user_id')
+            db.execute(
+                "INSERT INTO reviews (rate, comment, user_id, isbn_no, date) VALUES (:rate, :comment, :user_id, :isbn_no, :date)",
+                {"rate": rate, "comment": review, "user_id": user_id, "isbn_no": isbn,
+                 "date": datetime.datetime.today().strftime('%d-%m-%Y')})
+            db.commit()
+            flash("Thank you for reviewing this book!", "success")
+        return redirect(url_for('isbn', isbn=isbn))
+    else:
+        return render_template('isbn.html', book=book, form=form, ratings_count=review_count, avg_rating=average_score,
+                               cover=book_cover, reviews=reviews)
 
-    return render_template('isbn.html', book=book, form=form, ratings_count=ratings_count, avg_rating=avg_rating, cover=book_cover)
+
+@app.route("/api/<string:isbn>", methods=['GET'])
+def api(isbn):
+    book = db.execute("SELECT * FROM books WHERE isbn = :isbn", {"isbn": isbn}).fetchone()
+    if book is None:
+        abort(404)
+    else:
+        good_read_review = get_good_reads_review(isbn)
+        review_count = good_read_review['books'][0]['work_ratings_count']
+        average_score = good_read_review['books'][0]['average_rating']
+        return {
+            "title": book.title,
+            "author": book.author,
+            "year": book.year,
+            "isbn": book.isbn,
+            "review_count": review_count,
+            "average_score": average_score
+        }
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -54,7 +91,10 @@ def register():
         password = form.password.data
         first_name = form.first_name.data
         last_name = form.last_name.data
-        user = db.execute("INSERT INTO users (email, password, first_name, last_name) VALUES (:email, :password, :first_name, :last_name)", {"email": email, "password": generate_password_hash(password), "first_name": first_name, "last_name": last_name})
+        user = db.execute(
+            "INSERT INTO users (email, password, first_name, last_name) VALUES (:email, :password, :first_name, :last_name)",
+            {"email": email, "password": generate_password_hash(password), "first_name": first_name,
+             "last_name": last_name})
         db.commit()
         flash("You are successfully registered!", "success")
         return redirect(url_for('index'))
@@ -81,7 +121,6 @@ def login():
         else:
             flash("Sorry, wrong username or password.", "danger")
     return render_template("login.html", title="login", form=form, login=True)
-
 
 
 @app.route('/logout')

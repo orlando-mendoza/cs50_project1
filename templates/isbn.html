@@ -42,8 +42,19 @@
             </fieldset>
         </form>
     </div>
+    {% if reviews != None %}
+    {% for review in reviews %}
+
+    <div class='container col-md-10 offset-md-1 '>
+        <h6><font color="orange">Rating: {{review.rate}} of 5</font></h6>
+        <blockquote class="blockquote">
+            <p>{{review.comment}}</p>
+            <footer class="blockquote-footer">{{review.first_name}} {{review.last_name}} </footer>
+        </blockquote>
+    </div>
+
+    {% endfor %}
+    {% endif %}
 </div>
-
-
 
 {% endblock %}
