@@ -1,6 +1,6 @@
 import datetime
 
-from flask import Flask, redirect, render_template, session, flash, url_for, request, abort
+from flask import Flask, redirect, render_template, session, flash, url_for, request, abort, jsonify
 from application import app, db
 from goodreads import get_good_reads_review, get_book_cover
 from forms import LoginForm, RegisterForm, ReviewForm
@@ -66,19 +66,19 @@ def isbn(isbn):
 def api(isbn):
     book = db.execute("SELECT * FROM books WHERE isbn = :isbn", {"isbn": isbn}).fetchone()
     if book is None:
-        abort(404)
+        return jsonify({"error": "ISBN number not found!"}), 404
     else:
         good_read_review = get_good_reads_review(isbn)
         review_count = good_read_review['books'][0]['work_ratings_count']
         average_score = good_read_review['books'][0]['average_rating']
-        return {
+        return jsonify({
             "title": book.title,
             "author": book.author,
             "year": book.year,
             "isbn": book.isbn,
             "review_count": review_count,
             "average_score": average_score
-        }
+        })
 
 
 @app.route("/register", methods=["GET", "POST"])
